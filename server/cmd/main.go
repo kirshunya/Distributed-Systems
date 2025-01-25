@@ -24,5 +24,4 @@ func main() {
 
 		go handlers.HandleConnection(conn)
 	}
-
 }

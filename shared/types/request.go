@@ -18,18 +18,18 @@ type EchoCommandData struct {
 }
 
 type TimeCommandData struct {
-	Message string `json:"message"`
 }
 
 type CloseCommandData struct {
-	Message string `json:"message"`
 }
 
 type UploadCommandData struct {
 	FileName string `json:"file_name"`
-	Content  string `json:"content"`
+	Length   int64  `json:"length"`
+	Status   string `json:"status"`
 }
 
 type DownloadCommandData struct {
 	FileName string `json:"file_name"`
+	Status   string `json:"status"`
 }
