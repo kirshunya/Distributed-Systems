@@ -1,7 +1,7 @@
 package main
 
 import (
-	"distrubuted-system/server/types"
+	"distrubuted-system/shared/types"
 	"encoding/json"
 	"fmt"
 	"net"
