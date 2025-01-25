@@ -1,6 +1,8 @@
 package main
 
 import (
+	"distrubuted-system/server/types"
+	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -13,17 +15,17 @@ func main() {
 	}
 	defer conn.Close()
 
-	_, err = conn.Write([]byte("Привет, сервер!\n"))
-	if err != nil {
-		fmt.Println("Ошибка при отправке данных:", err)
-		return
+	msg := types.Request[types.EchoCommandData]{
+		CommandType: types.ECHO,
+		Data: types.EchoCommandData{
+			Message: "Hello, Server!",
+		},
 	}
 
-	buffer := make([]byte, 1024)
-	n, err := conn.Read(buffer)
+	encoder := json.NewEncoder(conn)
+	err = encoder.Encode(msg)
 	if err != nil {
-		fmt.Println("Ошибка при чтении ответа:", err)
+		fmt.Println("Ошибка при кодировании сообщения:", err)
 		return
 	}
-	fmt.Printf("Ответ от сервера: %s\n", string(buffer[:n]))
 }
