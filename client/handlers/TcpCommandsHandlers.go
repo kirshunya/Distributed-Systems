@@ -4,7 +4,9 @@ import (
 	"distrubuted-system/shared/types"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"os"
 )
 
 func SendTimeRequest(conn net.Conn) {
@@ -55,4 +57,48 @@ func sendRequest[T any](conn net.Conn, request types.Request[T]) {
 	}
 
 	fmt.Printf("Server response: Status=%s, Message=%s\n", response.Status, response.Message)
+}
+
+func SendFileResponse(conn net.Conn) {
+	var fileName string
+	fmt.Print("Введите имя файла: ")
+	fmt.Scan(&fileName)
+	request := types.Request[types.UploadCommandData]{
+		CommandType: types.UPLOAD,
+		Data: types.UploadCommandData{
+			FileName: fileName,
+			Status:   "Sending file",
+		},
+	}
+	sendRequest(conn, request)
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Println("Ошибка при открытии файла:", err)
+		return
+	}
+	defer file.Close()
+
+	// Отправляем имя файла
+	_, err = conn.Write([]byte(fileName))
+	if err != nil {
+		fmt.Println("Ошибка при отправке имени файла:", err)
+		return
+	}
+
+	_, err = io.Copy(conn, file)
+	if err != nil {
+		fmt.Println("Ошибка при отправке файла:", err)
+	}
+
+	fmt.Println("Файл успешно отправлен:", fileName)
+	request = types.Request[types.UploadCommandData]{
+		CommandType: types.UPLOAD,
+		Data: types.UploadCommandData{
+			FileName: fileName,
+			Status:   "File sent",
+		},
+	}
+	sendRequest(conn, request)
+	//sendRequest(conn, request)
 }

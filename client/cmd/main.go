@@ -38,6 +38,7 @@ func main() {
 			handlers.SendTimeRequest(conn)
 			break
 		case 3:
+			handlers.SendFileResponse(conn)
 			break
 		case 4:
 			break
