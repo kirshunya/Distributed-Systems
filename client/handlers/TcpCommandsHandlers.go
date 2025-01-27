@@ -59,7 +59,7 @@ func sendRequest[T any](conn net.Conn, request types.Request[T]) {
 	fmt.Printf("Server response: Status=%s, Message=%s\n", response.Status, response.Message)
 }
 
-func SendFileResponse(conn net.Conn) {
+func SendFileRequest(conn net.Conn) {
 	var fileName string
 	fmt.Print("Введите имя файла: ")
 	fmt.Scan(&fileName)
@@ -101,4 +101,39 @@ func SendFileResponse(conn net.Conn) {
 	}
 	sendRequest(conn, request)
 	//sendRequest(conn, request)
+}
+
+func SendDownloadRequest(conn net.Conn) {
+	fileName := "text.txt"
+	request := types.Request[types.DownloadCommandData]{
+		CommandType: types.DOWNLOAD,
+		Data: types.DownloadCommandData{
+			FileName: fileName,
+			Status:   "File request to download",
+		},
+	}
+	sendRequest(conn, request)
+
+	outFile, err := os.Create(fileName)
+	if err != nil {
+		fmt.Println("Ошибка при создании файла:", err)
+		return
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, conn)
+	if err != nil {
+		fmt.Println("Ошибка при записи в файл:", err)
+	}
+
+	fmt.Println("Файл успешно получен:", fileName)
+
+	request = types.Request[types.DownloadCommandData]{
+		CommandType: types.DOWNLOAD,
+		Data: types.DownloadCommandData{
+			FileName: fileName,
+			Status:   "File accepted",
+		},
+	}
+
 }

@@ -38,9 +38,10 @@ func main() {
 			handlers.SendTimeRequest(conn)
 			break
 		case 3:
-			handlers.SendFileResponse(conn)
+			handlers.SendFileRequest(conn)
 			break
 		case 4:
+			handlers.SendDownloadRequest(conn)
 			break
 		case 5:
 			fmt.Println("Closing connection.")

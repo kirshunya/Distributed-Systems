@@ -46,13 +46,15 @@ func HandleConnection(conn net.Conn) {
 		req.Data.FileName = baseRequest["data"].(map[string]interface{})["file_name"].(string)
 		req.Data.Status = baseRequest["data"].(map[string]interface{})["status"].(string)
 		fmt.Println("Uploading file:", req.Data.FileName)
-
 		sendResponse(conn, "Connected", "Загрузка файла началась..")
 		sendResponse(conn, "Success", req.Data.FileName)
 		sendFileResponse(conn, req.Data.FileName)
 
 	case types.DOWNLOAD:
-		// Добавьте обработку загрузки файла здесь
+		var req types.Request[types.DownloadCommandData]
+		req.Data.FileName = baseRequest["data"].(map[string]interface{})["file_name"].(string)
+		sendFile(conn, req.Data.FileName)
+		sendResponse(conn, "Success", req.Data.FileName)
 
 	default:
 		fmt.Println("Unknown command received")
@@ -94,4 +96,26 @@ func sendFileResponse(conn net.Conn, fileName string) {
 
 	fmt.Println("Файл успешно получен:", fileName)
 
+}
+
+func sendFile(conn net.Conn, fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Println("Ошибка при открытии файла:", err)
+		return
+	}
+	defer file.Close()
+
+	_, err = conn.Write([]byte(fileName))
+	if err != nil {
+		fmt.Println("Ошибка при отправке имени файла:", err)
+		return
+	}
+
+	_, err = io.Copy(conn, file)
+	if err != nil {
+		fmt.Println("Ошибка при отправке файла:", err)
+	}
+
+	fmt.Println("Файл успешно отправлен:", fileName)
 }
