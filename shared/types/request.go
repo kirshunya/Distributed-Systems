@@ -25,8 +25,8 @@ type CloseCommandData struct {
 
 type UploadCommandData struct {
 	FileName string `json:"file_name"`
-	//Length   int64  `json:"length"`
-	Status string `json:"status"`
+	FileSize int64  `json:"file_size"`
+	Status   string `json:"status"`
 }
 
 type DownloadCommandData struct {

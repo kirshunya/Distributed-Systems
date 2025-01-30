@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 )
 
 func SendTimeRequest(conn net.Conn) {
@@ -59,18 +60,10 @@ func sendRequest[T any](conn net.Conn, request types.Request[T]) {
 	fmt.Printf("Server response: Status=%s, Message=%s\n", response.Status, response.Message)
 }
 
-func SendFileRequest(conn net.Conn) {
+func SendUploadRequest(conn net.Conn) {
 	var fileName string
 	fmt.Print("Введите имя файла: ")
 	fmt.Scan(&fileName)
-	request := types.Request[types.UploadCommandData]{
-		CommandType: types.UPLOAD,
-		Data: types.UploadCommandData{
-			FileName: fileName,
-			Status:   "Sending file",
-		},
-	}
-	sendRequest(conn, request)
 
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -79,32 +72,37 @@ func SendFileRequest(conn net.Conn) {
 	}
 	defer file.Close()
 
-	// Отправляем имя файла
-	_, err = conn.Write([]byte(fileName))
+	fileInfo, err := file.Stat()
 	if err != nil {
-		fmt.Println("Ошибка при отправке имени файла:", err)
+		fmt.Println("Ошибка при получении информации о файле:", err)
 		return
 	}
+	fileSize := fileInfo.Size()
 
-	_, err = io.Copy(conn, file)
-	if err != nil {
-		fmt.Println("Ошибка при отправке файла:", err)
-	}
-
-	fmt.Println("Файл успешно отправлен:", fileName)
-	request = types.Request[types.UploadCommandData]{
+	request := types.Request[types.UploadCommandData]{
 		CommandType: types.UPLOAD,
 		Data: types.UploadCommandData{
 			FileName: fileName,
-			Status:   "File sent",
+			FileSize: fileSize,
+			Status:   "Sending file",
 		},
 	}
 	sendRequest(conn, request)
-	//sendRequest(conn, request)
+
+	startTime := time.Now()
+	_, err = io.Copy(conn, file)
+	if err != nil {
+		fmt.Println("Ошибка при отправке файла:", err)
+		return
+	}
+	elapsedTime := time.Since(startTime).Seconds()
+	bitrate := float64(fileSize) * 8 / elapsedTime / 1024
+
+	fmt.Printf("Файл успешно отправлен: %s, Битрейт: %.2f Кб/с\n", fileName, bitrate)
 }
 
 func SendDownloadRequest(conn net.Conn) {
-	fileName := "text.txt"
+	fileName := "jaba.js"
 	request := types.Request[types.DownloadCommandData]{
 		CommandType: types.DOWNLOAD,
 		Data: types.DownloadCommandData{
@@ -121,19 +119,16 @@ func SendDownloadRequest(conn net.Conn) {
 	}
 	defer outFile.Close()
 
+	startTime := time.Now()
 	_, err = io.Copy(outFile, conn)
 	if err != nil {
 		fmt.Println("Ошибка при записи в файл:", err)
+		return
 	}
+	elapsedTime := time.Since(startTime).Seconds()
+	fileInfo, _ := outFile.Stat()
+	bitrate := float64(fileInfo.Size()*8) / elapsedTime
 
-	fmt.Println("Файл успешно получен:", fileName)
-
-	request = types.Request[types.DownloadCommandData]{
-		CommandType: types.DOWNLOAD,
-		Data: types.DownloadCommandData{
-			FileName: fileName,
-			Status:   "File accepted",
-		},
-	}
+	fmt.Printf("Файл успешно получен: %s, Битрейт: %.2f Кб/с\n", fileName, bitrate)
 
 }

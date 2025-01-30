@@ -38,7 +38,7 @@ func main() {
 			handlers.SendTimeRequest(conn)
 			break
 		case 3:
-			handlers.SendFileRequest(conn)
+			handlers.SendUploadRequest(conn)
 			break
 		case 4:
 			handlers.SendDownloadRequest(conn)
