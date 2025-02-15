@@ -61,7 +61,7 @@ func HandleConnection(conn net.Conn) {
 		req.Data.FileName = baseRequest["data"].(map[string]interface{})["file_name"].(string)
 		sendResponse(conn, "Connected", "Загрузка файла началась..")
 		startTime := time.Now()
-		sendFile(conn, req.Data.FileName)
+		sendFile(req.Data.FileName)
 		fileInfo, _ := os.Stat(req.Data.FileName)
 		elapsedTime := time.Since(startTime).Seconds()
 		bitrate := float64(fileInfo.Size()*8) / elapsedTime / 1024
@@ -112,7 +112,7 @@ func sendFileResponse(conn net.Conn, fileName string, fileSize int64) {
 	sendResponse(conn, "Success", fileName)
 }
 
-func sendFile(conn net.Conn, fileName string) {
+func sendFile(fileName string) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		fmt.Println("Ошибка при открытии файла:", err)
