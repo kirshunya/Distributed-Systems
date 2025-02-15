@@ -94,17 +94,15 @@ func SendUploadRequest(conn net.Conn) {
 	}
 	sendRequest(conn, request)
 
-	fileListener, err := net.Listen("tcp", fileTransferPort)
+	fileTransfer, err := net.Dial("tcp", "172.20.10.3:9090")
 	if err != nil {
 		panic(err)
 	}
 
-	defer fileListener.Close()
-
-	fileTransferConn, err := fileListener.Accept()
+	defer fileTransfer.Close()
 
 	// Отправляем содержимое файла
-	_, err = io.Copy(fileTransferConn, file)
+	_, err = io.Copy(fileTransfer, file)
 	if err != nil {
 		fmt.Println("Ошибка при отправке файла:", err)
 		return
