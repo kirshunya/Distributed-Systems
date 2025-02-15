@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	keepAliveTTL          int    = 30
+	keepAliveTTL                 = 5
 	fileTransferPort      string = ":9090"
 	fileTransferChunkSize        = 1024
 )
@@ -128,6 +128,7 @@ func sendFile(conn net.Conn, fileName string) {
 	defer fileListener.Close()
 
 	fileTransferConn, err := fileListener.Accept()
+	fileTransferConn.SetReadDeadline(time.Now().Add(keepAliveTTL * time.Second))
 
 	// Отправляем содержимое файла
 	_, err = io.Copy(fileTransferConn, file)

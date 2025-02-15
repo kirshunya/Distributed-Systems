@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+const (
+	keepAliveTTL                 = 5
+	fileTransferPort      string = ":9090"
+	fileTransferChunkSize        = 1024
+)
+
 func SendTimeRequest(conn net.Conn) {
 	request := types.Request[types.TimeCommandData]{
 		CommandType: types.TIME,
@@ -96,7 +102,7 @@ func SendUploadRequest(conn net.Conn) {
 		return
 	}
 	elapsedTime := time.Since(startTime).Seconds()
-	bitrate := float64(fileSize) * 8 / elapsedTime / 1024
+	bitrate := float64(fileSize) / elapsedTime / 1024
 
 	fmt.Printf("Файл успешно отправлен: %s, Битрейт: %.2f Кб/с\n", fileName, bitrate)
 }
@@ -120,11 +126,12 @@ func SendDownloadRequest(conn net.Conn) {
 	defer outFile.Close()
 
 	fileCon, _ := net.Dial("tcp", "172.20.10.3:9090")
+	fileCon.SetReadDeadline(time.Now().Add(keepAliveTTL * time.Second))
+	fmt.Println(fileName)
 
 	_, err = io.Copy(outFile, fileCon)
 	if err != nil {
 		fmt.Println("Ошибка при записи в файл:", err)
-		return
 	}
 
 	buffer := make([]byte, 1024)
@@ -136,6 +143,10 @@ func SendDownloadRequest(conn net.Conn) {
 
 	var response types.Response
 	err = json.Unmarshal(buffer[:n], &response)
+	if err != nil {
+		fmt.Println("Error unmarshaling response:", err)
+		return
+	}
 
-	fmt.Printf("Файл успешно получен: %s, %s ", fileName, response)
+	fmt.Printf("Файл успешно получен: %s, %s", fileName, response)
 }
