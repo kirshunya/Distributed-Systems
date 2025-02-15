@@ -7,15 +7,15 @@ import (
 )
 
 func main() {
-	listener, err := net.Listen("tcp", ":8080")
+	requestListener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		panic(err)
 	}
 
-	defer listener.Close()
+	defer requestListener.Close()
 
 	for {
-		conn, err := listener.Accept()
+		conn, err := requestListener.Accept()
 		if err != nil {
 			panic(err)
 		}

@@ -102,7 +102,7 @@ func SendUploadRequest(conn net.Conn) {
 }
 
 func SendDownloadRequest(conn net.Conn) {
-	fileName := "jaba.js"
+	fileName := "text.txt"
 	request := types.Request[types.DownloadCommandData]{
 		CommandType: types.DOWNLOAD,
 		Data: types.DownloadCommandData{
@@ -119,16 +119,23 @@ func SendDownloadRequest(conn net.Conn) {
 	}
 	defer outFile.Close()
 
-	startTime := time.Now()
-	_, err = io.Copy(outFile, conn)
+	fileCon, _ := net.Dial("tcp", "172.20.10.3:9090")
+
+	_, err = io.Copy(outFile, fileCon)
 	if err != nil {
 		fmt.Println("Ошибка при записи в файл:", err)
 		return
 	}
-	elapsedTime := time.Since(startTime).Seconds()
-	fileInfo, _ := outFile.Stat()
-	bitrate := float64(fileInfo.Size()*8) / elapsedTime
 
-	fmt.Printf("Файл успешно получен: %s, Битрейт: %.2f Кб/с\n", fileName, bitrate)
+	buffer := make([]byte, 1024)
+	n, err := conn.Read(buffer)
+	if err != nil {
+		fmt.Println("Error reading response:", err)
+		return
+	}
 
+	var response types.Response
+	err = json.Unmarshal(buffer[:n], &response)
+
+	fmt.Printf("Файл успешно получен: %s, %s ", fileName, response)
 }

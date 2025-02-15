@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	ipAddress := "localhost:8080" // type here ip address of host machine
+	ipAddress := "172.20.10.3:8081" // type here ip address of host machine
 	conn, err := net.Dial("tcp", ipAddress)
 	if err != nil {
 		fmt.Println(err)

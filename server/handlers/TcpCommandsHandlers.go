@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+const (
+	keepAliveTTL          int    = 30
+	fileTransferPort      string = ":9090"
+	fileTransferChunkSize        = 1024
+)
+
 func HandleConnection(conn net.Conn) {
 	defer conn.Close()
 	buffer := make([]byte, 1024)
@@ -114,8 +120,17 @@ func sendFile(conn net.Conn, fileName string) {
 	}
 	defer file.Close()
 
+	fileListener, err := net.Listen("tcp", fileTransferPort)
+	if err != nil {
+		panic(err)
+	}
+
+	defer fileListener.Close()
+
+	fileTransferConn, err := fileListener.Accept()
+
 	// Отправляем содержимое файла
-	_, err = io.Copy(conn, file)
+	_, err = io.Copy(fileTransferConn, file)
 	if err != nil {
 		fmt.Println("Ошибка при отправке файла:", err)
 		return
